@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>The App</title>
+</head>
+<body>
+<div id="app"></div>
+<script src="elm.js"></script>
+<script>
+    const app = Elm.Main.init({
+        node: document.getElementById('app')
+    });
+</script>
+<hr/>
+<div class="events"></div>
+<script>
+    var clientWebSocket = new WebSocket("ws://localhost:8080/event-emitter");
+    clientWebSocket.onopen = function () {
+        console.log("clientWebSocket.onopen", clientWebSocket);
+        console.log("clientWebSocket.readyState", clientWebSocket.readyState);
+        clientWebSocket.send("event-me-from-browser");
+    };
+    clientWebSocket.onclose = function (error) {
+        console.log("clientWebSocket.onclose", clientWebSocket, error);
+        logMessage("Closing connection");
+    };
+    clientWebSocket.onerror = function (error) {
+        console.log("clientWebSocket.onerror", clientWebSocket, error);
+        logMessage("An error occurred");
+    };
+    clientWebSocket.onmessage = function (message) {
+        console.log("clientWebSocket.onmessage", clientWebSocket, message);
+        events(message.data);
+    };
+
+    function events(eventData) {
+        document.querySelector(".events").innerHTML += eventData + "<br>";
+        app.ports.receiveStuff.send(JSON.parse(eventData));
+    }
+
+    function logMessage(message) {
+        document.querySelector(".events").innerHTML += message + "<br>";
+    }
+</script>
+</body>
+</html>
